@@ -1,0 +1,114 @@
+{% extends "layout.html.twig" %}
+{% block title %} Przeglad  {% endblock %}
+{% block pageName %} Przeglad {% endblock %}
+{% block pageDescription %}{% endblock %}
+
+
+
+{% block content %}
+<div class="row">
+
+    <div class="col-md-3 col-sm-6 col-xs-12">
+        <div class="info-box bg-blue">
+            <span class="info-box-icon"><i class="ion ion-speedometer"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">RAM</span>
+                <span class="info-box-number"><span id="freeMem"></span>/<span id="totalMem"></span> MB</span>
+                <div class="progress">
+                    <div class="progress-bar" id="progressMemory" ></div>
+                </div>
+                  <span class="progress-description"></span>
+            </div><!-- /.info-box-content -->
+        </div><!-- /.info-box -->
+    </div><!-- /.col -->
+    <div class="col-md-3 col-sm-6 col-xs-12">
+        <div class="info-box bg-red">
+            <span class="info-box-icon"><i class="ion ion-ios-clock-outline"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Uptime</span>
+                <h4 class="text-bold" id="uptime"></h4>
+            </div><!-- /.info-box-content -->
+        </div><!-- /.info-box -->
+    </div><!-- /.col -->
+    <div class="col-md-3 col-sm-6 col-xs-12">
+        <div class="info-box bg-teal">
+            <span class="info-box-icon"><i class="ion ion-thermometer"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Temperatura CPU</span>
+                <h4 class="text-bold" id="cpuTemp"></h4>
+            </div><!-- /.info-box-content -->
+        </div><!-- /.info-box -->
+    </div><!-- /.col -->
+    <div class="col-md-3 col-sm-6 col-xs-12">
+        <div class="info-box bg-maroon">
+            <span class="info-box-icon"><i class="ion ion-fireball"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Aktualne taktowanie CPU</span>
+                <h4 class="text-bold" id="cpuFreq"></h4>
+            </div><!-- /.info-box-content -->
+        </div><!-- /.info-box -->
+    </div><!-- /.col -->
+
+</div><!-- /.row -->
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="box box-success">
+            <div class="box-header with-border">
+                <h3 class="box-title">Internet</h3>
+                <div class="box-tools pull-right">
+                    <button class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                    <button class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                </div>
+            </div><!-- /.box-header -->
+            <div class="box-body no-padding">
+                <div class="row">
+                    <div class="col-md-12 col-sm-12">
+                        <div class="col-md-4">
+                            <h4 class="text-center">Download</h4>
+                            <input type="text"  id="speedDownload"  data-angleOffset="-125"  data-readOnly="true" data-angleArc="250" class="dial" data-min="0" data-max="100">
+                        </div>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.box-body -->
+        </div><!-- /.box -->
+    </div>
+</div>
+
+<script>
+    $(function() {
+        $(".dial").knob();
+    });
+
+    var socket = io("http://192.168.1.105:3001");
+    socket.on('platformInfo', function(data){
+        //ram
+        var percentageMem = ((data.totalmem - data.freemem) / data.totalmem) * 100;
+        $("#progressMemory").css("width",percentageMem + '%');
+        $("#freeMem").html(((data.totalmem - data.freemem)/1024/1024).toFixed(0));
+        $("#totalMem").html((data.totalmem/1024/1024).toFixed(0));
+
+        //time
+        var time = convertS(data.uptime);
+        $("#uptime").html(time.d + " dni " + time.h + " godzin " + time.m + " minut");
+
+
+    });
+
+    socket.on('cpuTemp',function(data){
+        $("#cpuTemp").html(data.temp.toFixed(2) + " °C");
+    });
+
+    socket.on('cpuFreq',function(data){
+        $("#cpuFreq").html(data.freq.toFixed(2) + " MHz");
+    });
+
+    socket.on('speedtest',function(data){
+        $("#speedDownload").val(data.speeds.download.toFixed(2));
+        $('#speedDownload')
+                .val(data.speeds.download.toFixed(2))
+                .trigger('change');
+        console.log(data);
+    });
+</script>
+{% endblock %}
